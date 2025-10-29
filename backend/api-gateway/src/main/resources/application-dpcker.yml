@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: api-gateway
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-registry:8761/eureka/
+
+  instance:
+    prefer-ip-address: false
+    hostname: api-gateway
+    instance-id: api-gateway:8080
