@@ -1,0 +1,108 @@
+spring:
+  
+  application:
+    name: subscription-service  # Nom du service (utilisé pour la découverte de service, logs, etc.)
+
+  # ============================================
+  # CONFIGURATION BASE DE DONNÉES
+  # ============================================
+  datasource:
+    
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/subscription_service}
+    
+    # Identifiants de connexion
+    username: ${DB_USERNAME:postgres}        
+    password: ${DB_PASSWORD:akb}        
+    
+    # Driver JDBC (ne pas modifier sauf si vous changez de SGBD)
+    driver-class-name: org.postgresql.Driver
+    
+    # Configuration du pool de connexions (HikariCP)
+    hikari:
+      maximum-pool-size: 10      # Nombre max de connexions simultanées (ajustez selon votre charge)
+      minimum-idle: 5             # Nombre min de connexions inactives maintenues
+      connection-timeout: 30000   # Timeout pour obtenir une connexion (30 secondes)
+      idle-timeout: 600000        # Timeout avant de fermer une connexion inutilisée (10 minutes)
+      max-lifetime: 1800000       # Durée max de vie d'une connexion (30 minutes)
+
+  # ============================================
+  # CONFIGURATION JPA/HIBERNATE
+  # ============================================
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    
+    show-sql: false 
+    open-in-view: false  # Désactiver pour éviter les requêtes pendant le rendu des vues
+    
+    properties:
+      hibernate:
+        # Dialecte SQL détecté automatiquement par Hibernate (non nécessaire)
+        # dialect: org.hibernate.dialect.PostgreSQLDialect  # Retiré - détection automatique
+        
+        # Formatage des requêtes SQL dans les logs (plus lisible)
+        format_sql: true
+        
+        # Afficher les commentaires dans les requêtes SQL
+        use_sql_comments: true
+        
+        # Optimisations de performance
+        jdbc:
+          batch_size: 20          # Nombre d'opérations groupées par batch
+        order_inserts: true        # Ordonner les INSERT pour meilleure performance
+        order_updates: true        # Ordonner les UPDATE pour meilleure performance
+
+  # ============================================
+  # CONFIGURATION FLYWAY (MIGRATIONS DB)
+  # ============================================
+  flyway:
+    enabled: true                           # Activer Flyway (mettre à false pour désactiver)
+    locations: classpath:db/migration       # Dossier où se trouvent les migrations SQL
+    baseline-on-migrate: true               # Créer une baseline si la DB existe déjà
+    validate-on-migrate: true               # Valider les migrations avant de les exécuter
+    clean-disabled: true                    # Désactiver la commande clean (sécurité)
+
+# ============================================
+# CONFIGURATION SERVEUR WEB
+# ============================================
+server:
+  port: 8085  
+
+# ============================================
+# CONFIGURATION ACTUATOR (MONITORING)
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # Endpoints exposés (pour le monitoring)
+        # Disponibles: health, info, metrics, env, beans, etc.
+        include: health,info,metrics
+  endpoint:
+    health:
+      # Niveau de détail des informations de santé
+      # Options: never, when-authorized, always
+      show-details: when-authorized
+
+# ============================================
+# CONFIGURATION DES LOGS
+# ============================================
+logging:
+  level:
+    root: INFO                              # Niveau global (TRACE, DEBUG, INFO, WARN, ERROR)
+    com.transport.subscription: DEBUG       # Niveau pour votre package (plus détaillé)
+    org.springframework.web: INFO          # Niveau pour Spring Web
+    org.hibernate.SQL: DEBUG                # Afficher les requêtes SQL (utile pour debug)
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # Afficher les paramètres SQL
+  
+  pattern:
+    # Format des logs dans la console
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    # Format des logs dans les fichiers (si vous configurez file logging)
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+payment:
+  gateway:
+    provider: ${PAYMENT_GATEWAY_PROVIDER:mock}
+    api-key: ${PAYMENT_GATEWAY_API_KEY:}
+    webhook-secret: ${PAYMENT_GATEWAY_WEBHOOK_SECRET:}
